@@ -1,0 +1,49 @@
+
+1. 软件安装
+[root@test1 ~]# yum -y install dhcp
+
+2.查看dhcp软件
+[root@test1 ~]# rpm -ql dhcp     //查看dhcp生成了哪些文件
+[root@test1 ~]# rpm -qc dhcp     //查看dhcp的配置文件有哪些
+/etc/dhcp/dhcpd.conf          //dhcp的主配置文件
+/etc/dhcp/dhcpd6.conf           //dhcp的IPv6主配置文件
+/etc/openldap/schema/dhcp.schema      //关于dhcp 域服务的配置
+/etc/sysconfig/dhcpd          //关于dhcp服务相关的配置
+/var/lib/dhcpd/dhcpd.leases      //dhcp已分配的ip记录
+/var/lib/dhcpd/dhcpd6.leases      //dhcp ipv6已分配的ip记录
+
+3. 配置dhcpd.conf
+[root@test1 ~]# cat /etc/dhcp/dhcpd.conf
+#
+# DHCP Server Configuration file.
+#   see /usr/share/doc/dhcp*/dhcpd.conf.example              //拷贝样例文件到覆盖主配置文件
+#   see dhcpd.conf(5) man page                 //告诉你帮助手册
+#
+[root@test1 ~]# cp /usr/share/doc/dhcp-4.2.5/dhcpd.conf.example /etc/dhcp/dhcpd.conf
+[root@test1 ~]# vim /etc/dhcp/dhcpd.conf
+option domain-name  “aishangwei.net”;        //定义域名
+option doamin-name-servers 172.16.1.101,172.16.1.102;   // 全局定义DNS地址
+default-lease-time 600;   // 定义租赁时长
+max-lease-time 7200;    
+log-facility local7;     // 定义日志
+subnet 172.16.1.0 netmask 255.255.255.0 {
+range 172.16.1.100 172.16.1.200;              //定义可以分配的IP地址池  
+option domain-name-servers 172.16.1.101;         //为该子网定义dns
+option domain-name “aishangwei.net”;         //为该子网定义域名  
+option routers 172.16.1.1;                   //为该子网定义网关
+option broadcast-address 172.16.1.255;           //为该子网定义广播地址
+option time-offset -18000;         //定义时区偏移
+option ntp-servers  172.16.1.121;       //定义ntp时间服务器                     
+default-lease-time 600;            //为该子网定义租赁时长
+max-lease-time 7200;
+next-server  172.16.1.120;         //为该子网主机配置网络引导网络地址
+
+}
+host   www {                                 //为该主机定义固定IP
+hardware ethernet 08:00:07:26:c0:a5;
+ fixed-address 172.16.1.150;
+}
+注：更多参数请参阅：   man   dhcpd.conf
+
+4. 启动服务
+[root@test1 ~]# systemctl start dhcpd
