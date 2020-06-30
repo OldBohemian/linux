@@ -1,0 +1,49 @@
+Linux系统提供了两个对Shell编程非常有用的特殊文件，/dev/null和/dev/tty。
+
+ 
+
+1./dev/null
+
+/dev/null将会丢掉所有写入它的数据，换句换说，当程序将数据写入到此文件时，会认为它已经成功完成写入数据的操作，但实际上什么事都没有做。如果你需要的是命令的退出状态，而非它的输出，此功能会非常有用。
+
+首先，我们在hello.txt文件中写入：hello world
+
+然后，创建脚本文件：temp.sh，该脚本用于判断hello.txt中是否有关键词“hello”
+
+#！ /bin/sh
+if grep hello hello.txt > /dev/null
+then 
+    echo "Found"
+else
+    echo "Not Found"
+fi
+最后，运行该脚本：sh temp.sh
+
+则脚本输出Found，表示在hello.txt中找到了“hello”一词，除此之外不会显示额外信息（额外信息都被写入/dev/null中，从而保证了输出的简介性）。
+
+在脚本中，如果未将grep hello hello.txt的内容写入/dev/null中，则会在终端中显示grep hello hello.txt命令的返回内容。
+
+如果读取/dev/null则会返回文件结束符号（end-of-file），读取/dev/null的操作在Shell程序中并不常见。
+
+ 
+
+2./dev/tty
+
+/dev/tty如果一个控制台有一个终端的话，那么这个文件就是对应的当前的这个控制终端的别名。当程序打开此文件是，Linux会自动将它重定向到一个终端窗口[一个实体的控制台（console）或者串行端口（serial port），也可能是一个通过网络与窗口登陆的为终端（pseudterminal）]，因此该文件对于读取人工输入时（例如密码）特别有用。
+
+#! /bin/sh
+printf "Enter your password: "
+stty -echo
+read passwd1 < /dev/tty
+printf "\nEnter your password again: "
+read passwd2 < /dev/tty
+stty echo
+ 
+if [ "$passwd1" = "$passwd2" ]
+then
+    passwd=$passwd1
+    printf "\nPassword set successfully!\n"
+else
+    printf "\nThe two passwords you typed do not match!\n"
+fi
+stty(set tty) 命令是用来控制终端的，stty -echo表示关闭自动打印每个输入字符的功能，stty echo表示恢复自动打印每个输入字符的功能。运行上面的脚本，在终端上并不会显示输入的密码，保证了密码的安全性。
